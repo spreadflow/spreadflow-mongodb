@@ -1,8 +1,8 @@
 SpreadFlow MongoDB
 ==================
 
-.. image:: https://travis-ci.org/znerol/spreadflow-proc-mongodb.svg?branch=master
-    :target: https://travis-ci.org/znerol/spreadflow-proc-mongodb
+.. image:: https://travis-ci.org/znerol/spreadflow-mongodb.svg?branch=master
+    :target: https://travis-ci.org/znerol/spreadflow-mongodb
 
 
 MongoDB support for SpreadFlow metadata extraction and processing engine.

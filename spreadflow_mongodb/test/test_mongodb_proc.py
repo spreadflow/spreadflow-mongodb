@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 
 from twisted.trial import unittest
 
-from spreadflow_proc_mongodb import MongoService, MongoDestination
+from spreadflow_mongodb.proc import MongoService, MongoDestination
 
 
-class SpreadflowProcMongoDBTestCase(unittest.TestCase):
+class SpreadflowMongoDBTestCase(unittest.TestCase):
     pass

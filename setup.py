@@ -1,15 +1,15 @@
 from setuptools import setup
 
 setup(
-    name='SpreadFlowProcMongoDB',
+    name='SpreadFlowMongoDB',
     version='0.0.1',
     description='MongoDB support for SpreadFlow metadata extraction and processing engine',
     author='Lorenz Schori',
     author_email='lo@znerol.ch',
-    url='https://github.com/znerol/spreadflow-proc-mongodb',
+    url='https://github.com/znerol/spreadflow-mongodb',
     packages=[
-        'spreadflow_proc_mongodb',
-        'spreadflow_proc_mongodb.test'
+        'spreadflow_mongodb',
+        'spreadflow_mongodb.test'
     ],
     install_requires=[
         'SpreadFlowCore',

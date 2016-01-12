@@ -6,4 +6,4 @@ install:
   - python bootstrap.py
   - bin/buildout
 script:
-  - bin/trial spreadflow_proc_mongodb
+  - bin/trial spreadflow_mongodb

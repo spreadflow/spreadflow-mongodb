@@ -4,7 +4,11 @@ from __future__ import unicode_literals
 
 import pymongo
 import threading
-from Queue import Queue
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
+
 from twisted.internet import defer
 from twisted.python import failure
 

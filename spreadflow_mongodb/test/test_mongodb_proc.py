@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from twisted.trial import unittest
 
-from spreadflow_mongodb.proc import MongoService, MongoDestination
+from spreadflow_mongodb.proc import MongoConnection, MongoCollectionDeltaSync
 
 
 class SpreadflowMongoDBTestCase(unittest.TestCase):

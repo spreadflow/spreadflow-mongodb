@@ -37,7 +37,7 @@ class WorkerJob(object):
             reactor.callFromThread(self.d.callback, result)
         return True
 
-class MongoService(object):
+class MongoConnection(object):
 
     reactor = None
     _client = None
@@ -45,15 +45,13 @@ class MongoService(object):
     _queue = None
     _thread = None
 
-    def __init__(self, db = 'test_database', uri = 'mongodb://localhost:27017/'):
+    def __init__(self, uri='mongodb://localhost:27017/'):
         self.uri = uri
-        self.db = db
 
+    @defer.inlineCallbacks
     def attach(self, dispatcher, reactor):
         self.reactor = reactor
 
-    @defer.inlineCallbacks
-    def start(self):
         self._queue = Queue()
         self._thread = threading.Thread(target=self._mongo_worker, args=(self.reactor, self._queue))
         self._thread.start()
@@ -61,7 +59,7 @@ class MongoService(object):
         self._client = yield self.cmd(pymongo.MongoClient, self.uri)
 
     @defer.inlineCallbacks
-    def join(self):
+    def detach(self):
         if self._thread:
             if self._thread.is_alive():
                 yield self._worker_stop()
@@ -73,17 +71,22 @@ class MongoService(object):
         self._client = None
         self._queue = None
         self._thread = None
-
-    def detach(self):
         self.reactor = None
+
+    @defer.inlineCallbacks
+    def __call__(self, item, send):
+        if item[0] == 'collection':
+            _, database, collection, name, args, kwargs = item
+            func = getattr(self._client[database][collection], name)
+            result = yield self.cmd(func, *args, **kwargs)
+            send(result, self)
+        else:
+            raise RuntimeError('Cannot handle command ' + item[0])
 
     def cmd(self, f, *args, **kwargs):
         d = defer.Deferred()
         self._queue.put(WorkerJob(d, f, *args, **kwargs))
         return d
-
-    def collection(self, collection):
-        return self._client[self.db][collection]
 
     def _worker_stop(self):
         d = defer.Deferred()
@@ -98,41 +101,28 @@ class MongoService(object):
             alive = job.run(reactor)
             queue.task_done()
 
-class MongoDestination(object):
+class MongoCollectionDeltaSync(object):
 
-    _collection = None
-
-    def __init__(self, service, collection='test_collection', reset=False):
-        self.service = service
+    def __init__(self, database='test_database', collection='test_collection', reset=False):
+        self.database = database
         self.collection = collection
         self.reset = reset
 
-    @defer.inlineCallbacks
-    def start(self):
-        self._collection = self.service.collection(self.collection)
-        if self.reset:
-            yield self.service.cmd(self._collection.remove, {})
-
-    def join(self):
-        self._collection = None
-
-    @defer.inlineCallbacks
     def __call__(self, item, send):
-        deferreds = []
+        if (self.reset):
+            cmd = self._format_cmd('delete_many', {})
+            send(cmd, self)
+            self.reset = False
 
         if len(item['deletes']):
-            deletes = item['deletes'][:]
-            deferreds.append(self.service.cmd(self._collection.remove, {'_id':{'$in':deletes}}))
+            query = {'_id': {'$in': item['deletes'][:]}}
+            cmd = self._format_cmd('delete_many', query)
+            send(cmd, self)
 
         if len(item['inserts']):
             docs = [dict(item['data'][oid].items() + [('_id', oid)]) for oid in item['inserts']]
-            deferreds.append(self.service.cmd(self._collection.insert, docs))
+            cmd = self._format_cmd('insert_many', docs)
+            send(cmd, self)
 
-        if len(deferreds):
-            yield defer.DeferredList(deferreds, fireOnOneErrback=True)
-
-        send(item, self)
-
-    @property
-    def dependencies(self):
-        yield (self, self.service)
+    def _format_cmd(self, name, *args):
+        return "collection", self.database, self.collection, name, args, {}

@@ -120,7 +120,11 @@ class MongoCollectionDeltaSync(object):
             send(cmd, self)
 
         if len(item['inserts']):
-            docs = [dict(item['data'][oid].items() + [('_id', oid)]) for oid in item['inserts']]
+            docs = []
+            for oid in item['inserts']:
+                doc = item['data'][oid].copy()
+                doc['_id'] = oid
+                docs.append(doc)
             cmd = self._format_cmd('insert_many', docs)
             send(cmd, self)
 

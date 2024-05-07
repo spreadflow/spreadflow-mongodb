@@ -3,6 +3,13 @@
 
 [run]
 branch = True
-source = spreadflow_mongodb
+source_pkgs =
+    spreadflow_mongodb
 omit =
-    spreadflow_mongodb/test/*
+    /tmp/**
+    spreadflow_mongodb/test/**
+
+[report]
+omit =
+    /tmp/**
+    spreadflow_mongodb/test/**
